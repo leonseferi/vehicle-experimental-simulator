@@ -1,5 +1,7 @@
 # Vehicle Experimental Simulator 🚗
 
+This is a project i've worked on for a while - finally came round to publishing.
+
 A modular physics-driven vehicle simulation engine built using Python and Pygame.
 
 ## Overview
