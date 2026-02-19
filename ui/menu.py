@@ -1,9 +1,5 @@
 """
 ui/menu.py – Main menu, How-to-Play screen, and Leaderboard screen.
-
-Each draw_* function is self-contained: it draws one frame's worth of UI,
-handles any relevant events from the *events* list passed in, and returns
-a command integer (or modifies menu-state flags via the shared state dict).
 """
 
 from __future__ import annotations
@@ -18,7 +14,7 @@ from config import (
 )
 from ui.widgets import Buttons
 
-# ── Sorting helpers (used for leaderboard) ────────────────────────────────────
+# ── Sorting helpers ───────────────────────────────────────────────────────────
 
 def _insertion_sort(data: list[dict], start: int, end: int) -> None:
     for i in range(start + 1, end + 1):
@@ -48,7 +44,6 @@ def _merge(data: list[dict], start: int, mid: int, end: int) -> None:
 
 
 def merge_sort_scores(data: list[dict], start: int = 0, end: int | None = None) -> None:
-    """In-place descending merge-sort with insertion-sort for small runs."""
     if end is None:
         end = len(data) - 1
     if end - start + 1 <= 10:
@@ -64,38 +59,34 @@ def merge_sort_scores(data: list[dict], start: int = 0, end: int | None = None) 
 # ── Main menu ─────────────────────────────────────────────────────────────────
 
 def draw_menu(screen: pygame.Surface, bg: pygame.Surface) -> int:
-    """
-    Draw the main menu and return a command integer:
-      1 Quick Start | 2 Modify Vehicle | 3 Modify Driver
-      4 Settings    | 5 Account        | 6 How to Play
-      7 Leaderboard | -1 nothing clicked
-    """
     screen.blit(bg, (0, 0))
 
     font_title = pygame.font.Font(FONT_PATH, 40)
-    title_surf = font_title.render("Vehicle Experimental Simulator", True, (255, 255, 255))
-    title_rect = title_surf.get_rect(center=(WIDTH // 2, 40))
 
-    # Cyan header bar
-    pygame.draw.rect(screen, (0, 255, 255), pygame.Rect(0, 0, WIDTH, 80))
-    screen.blit(title_surf, title_rect)
+    # Black drop shadow for legibility over the background image
+    shadow_surf = font_title.render("Vehicle Experimental Simulator", True, (0, 0, 0))
+    screen.blit(shadow_surf, shadow_surf.get_rect(center=(WIDTH // 2 + 2, 42)))
+
+    # White title text
+    title_surf = font_title.render("Vehicle Experimental Simulator", True, (255, 255, 255))
+    screen.blit(title_surf, title_surf.get_rect(center=(WIDTH // 2, 40)))
 
     total_h = 3 * BUTTON_HEIGHT + 2 * BUTTON_SPACING_Y
-    sx = (WIDTH - 2 * BUTTON_WIDTH - BUTTON_SPACING_X) // 2
-    sy = (HEIGHT - total_h) // 2
+    sx   = (WIDTH - 2 * BUTTON_WIDTH - BUTTON_SPACING_X) // 2
+    sy   = (HEIGHT - total_h) // 2
     row2y = sy + BUTTON_HEIGHT + BUTTON_SPACING_Y
     row3y = sy + 2 * (BUTTON_HEIGHT + BUTTON_SPACING_Y)
     row4y = row3y + BUTTON_HEIGHT + BUTTON_SPACING_Y
-    cx = (WIDTH - BUTTON_WIDTH) // 2
+    cx   = (WIDTH - BUTTON_WIDTH) // 2
 
     buttons = [
-        Buttons("Quick Start",      (sx,                        sy),    screen=screen),
+        Buttons("Quick Start",      (sx,                               sy),    screen=screen),
         Buttons("Modify Vehicle",   (sx + BUTTON_WIDTH + BUTTON_SPACING_X, sy),    screen=screen),
-        Buttons("Modify Driver",    (sx,                        row2y), screen=screen),
+        Buttons("Modify Driver",    (sx,                               row2y), screen=screen),
         Buttons("Settings",         (sx + BUTTON_WIDTH + BUTTON_SPACING_X, row2y), screen=screen),
-        Buttons("Account",          (sx,                        row3y), screen=screen),
+        Buttons("Account",          (sx,                               row3y), screen=screen),
         Buttons("How to Play",      (sx + BUTTON_WIDTH + BUTTON_SPACING_X, row3y), screen=screen),
-        Buttons("View Leaderboard", (cx,                        row4y), screen=screen),
+        Buttons("View Leaderboard", (cx,                               row4y), screen=screen),
     ]
 
     command = -1
@@ -115,22 +106,20 @@ def draw_how_to_play(
     bg: pygame.Surface,
     dim: pygame.Surface,
 ) -> bool:
-    """Draw the How-to-Play screen. Returns False when the user clicks Return."""
     screen.blit(bg, (0, 0))
     screen.blit(dim, (0, 0))
 
     font = pygame.font.Font(FONT_PATH, 20)
     lines = [
-        "UP ARROW   – Drive Forward",
-        "DOWN ARROW – Reverse",
-        "LEFT ARROW – Drift Left",
+        "UP ARROW    – Drive Forward",
+        "DOWN ARROW  – Reverse",
+        "LEFT ARROW  – Drift Left",
         "RIGHT ARROW – Drift Right",
-        "TAB        – Speed Booster",
+        "TAB         – Speed Booster",
     ]
     for i, line in enumerate(lines):
         surf = font.render(line, True, (255, 255, 255))
-        rect = surf.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100 + i * 50))
-        screen.blit(surf, rect)
+        screen.blit(surf, surf.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100 + i * 50)))
 
     return_btn = Buttons(
         "Return to Menu",
@@ -143,9 +132,9 @@ def draw_how_to_play(
         if event.type == pygame.QUIT:
             pygame.quit(); sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN and return_btn.check_clicked():
-            return False   # signal: leave this screen
+            return False
 
-    return True  # stay on How-to-Play
+    return True
 
 
 # ── Leaderboard ───────────────────────────────────────────────────────────────
@@ -157,10 +146,6 @@ def draw_leaderboard(
     events: list[pygame.event.Event],
     score_data: list[dict],
 ) -> bool:
-    """
-    Draw a sorted leaderboard. Returns False when the user clicks Return.
-    *score_data* is mutated in-place (sorted descending).
-    """
     screen.blit(bg, (0, 0))
     screen.blit(dim, (0, 0))
 
@@ -188,4 +173,4 @@ def draw_leaderboard(
         if event.type == pygame.MOUSEBUTTONDOWN and return_btn.check_clicked():
             return False
 
-    return True  # stay on leaderboard
+    return True
